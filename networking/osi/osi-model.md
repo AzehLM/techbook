@@ -112,6 +112,14 @@ goes bottom-up:
 4. **L4** — Is the remote port open/listening (`telnet`/`nc` to the port)?
 5. **L7** — Is the application actually responding correctly (curl the URL, check DNS)?
 
+## Quiz
+
+Self-test on this material: **[OSI Stack Quiz](https://claude.ai/artifact/8C8YagcECjLUXGbv8tqD1G)**
+— draws 10 random questions from a pool of 32 each time, so it's reusable. Covers the
+7 layers, encapsulation order, ARP/TLS/ICMP placement, the OSI-vs-TCP/IP mapping,
+sockets, TCP vs. UDP, and device-to-layer mapping. Supports skip / previous /
+jump-to-question navigation, and keeps your progress in the browser if you refresh.
+
 ## Cheat sheets
 
 Two reference posters, for a quick visual recap rather than reading prose:
@@ -127,11 +135,3 @@ model mapping and a top-to-bottom "GATEWAY" mnemonic (a different acrostic from
 *ccieby30's "Understanding the OSI Model" — per-layer protocol lists (including
 routing protocols like EIGRP/OSPF at layer 3, and PPP/Frame Relay at layer 2)
 and the encapsulation/de-encapsulation definitions side by side.*
-
-## Quiz
-
-Self-test on this material: **[OSI Stack Quiz](https://claude.ai/artifact/8C8YagcECjLUXGbv8tqD1G)**
-— draws 10 random questions from a pool of 32 each time, so it's reusable. Covers the
-7 layers, encapsulation order, ARP/TLS/ICMP placement, the OSI-vs-TCP/IP mapping,
-sockets, TCP vs. UDP, and device-to-layer mapping. Supports skip / previous /
-jump-to-question navigation, and keeps your progress in the browser if you refresh.
