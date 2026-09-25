@@ -1,0 +1,935 @@
+<!doctype html>
+<title>OSI Stack Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f3ef;
+    --surface:#ffffff;
+    --ink:#14171c;
+    --ink-dim:#565f6b;
+    --line:#d8d5cc;
+    --accent:#c05621;      /* copper conductor */
+    --accent-ink:#ffffff;
+    --accent-2:#0e7c86;    /* fiber-optic teal */
+    --success:#1f7a4d;
+    --success-bg:#e3f3ea;
+    --danger:#b3261e;
+    --danger-bg:#f8e6e4;
+    --skip:#8a6d1f;
+    --skip-bg:#f5ecd2;
+    --radius:14px;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0b1016;
+      --surface:#121922;
+      --ink:#e7e9ec;
+      --ink-dim:#9aa3ad;
+      --line:#232b34;
+      --accent:#e08a3c;
+      --accent-ink:#0b1016;
+      --accent-2:#35c2cf;
+      --success:#3ddc84;
+      --success-bg:#12291d;
+      --danger:#ff6b62;
+      --danger-bg:#2c1414;
+      --skip:#e0c15c;
+      --skip-bg:#2b2311;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0b1016;
+    --surface:#121922;
+    --ink:#e7e9ec;
+    --ink-dim:#9aa3ad;
+    --line:#232b34;
+    --accent:#e08a3c;
+    --accent-ink:#0b1016;
+    --accent-2:#35c2cf;
+    --success:#3ddc84;
+    --success-bg:#12291d;
+    --danger:#ff6b62;
+    --danger-bg:#2c1414;
+    --skip:#e0c15c;
+    --skip-bg:#2b2311;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Public Sans",-apple-system,Segoe UI,Roboto,sans-serif;
+    padding-inline:20px;
+    padding-block:calc(28px + var(--safe-t)) calc(40px + var(--safe-b));
+  }
+  .mono{font-family:"JetBrains Mono","SF Mono",Consolas,monospace;}
+
+  .wrap{max-width:1000px;margin:0 auto;}
+
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  header.top .titles{display:flex;flex-direction:column;gap:6px;}
+  .eyebrow{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--accent-2);
+    font-weight:700;
+  }
+  h1{
+    font-family:"JetBrains Mono",monospace;
+    font-size:clamp(24px,4vw,34px);
+    margin:0;
+    text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--ink-dim);font-size:14.5px;max-width:60ch;margin:2px 0 0;}
+
+  button.ghost-small{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:var(--ink-dim);
+    background:transparent;
+    border:1px solid var(--line);
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+    flex:none;
+  }
+  button.ghost-small:hover{border-color:var(--accent-2);color:var(--accent-2);}
+
+  .layout{
+    display:grid;
+    grid-template-columns:172px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width:720px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  /* ---- stack rack ---- */
+  .rack{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    position:sticky;
+    top:calc(16px + var(--safe-t));
+  }
+  @media (max-width:720px){
+    .rack{
+      position:static;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+    }
+  }
+  .layer-box{
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--surface);
+    padding:8px 10px;
+    position:relative;
+    overflow:hidden;
+    transition:border-color .25s ease;
+  }
+  .layer-box .fill{
+    position:absolute;
+    inset:0;
+    width:0%;
+    background:transparent;
+    transition:width .5s ease, background .3s ease;
+    z-index:0;
+  }
+  .layer-box.correct .fill{background:linear-gradient(90deg, color-mix(in srgb, var(--success) 30%, transparent), color-mix(in srgb, var(--success) 14%, transparent)); width:100%;}
+  .layer-box.wrong .fill{background:linear-gradient(90deg, color-mix(in srgb, var(--danger) 26%, transparent), color-mix(in srgb, var(--danger) 12%, transparent)); width:100%;}
+  .layer-box.skipped .fill{background:linear-gradient(90deg, color-mix(in srgb, var(--skip) 26%, transparent), color-mix(in srgb, var(--skip) 10%, transparent)); width:100%;}
+  .layer-box.active{border-color:var(--accent);}
+  .layer-box .num{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    font-weight:700;
+    color:var(--ink-dim);
+    position:relative;
+    z-index:1;
+  }
+  .layer-box .name{
+    font-size:13px;
+    font-weight:600;
+    position:relative;
+    z-index:1;
+  }
+  .rack-general{
+    margin-top:8px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    color:var(--ink-dim);
+  }
+  .rack-general.hide{display:none;}
+  @media (max-width:720px){ .rack-general{grid-column:1/-1; margin-top:2px;} }
+  .rack-general .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--line);
+    flex:none;
+  }
+  .rack-general .dot.correct{background:var(--success);}
+  .rack-general .dot.wrong{background:var(--danger);}
+  .rack-general .dot.skipped{background:var(--skip);}
+
+  /* ---- quiz card ---- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+  }
+  .progress-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:14px;
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    color:var(--ink-dim);
+  }
+  .progress-track{
+    height:5px;
+    background:var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--accent-2);
+    width:0%;
+    transition:width .4s ease;
+  }
+
+  /* question dot navigator */
+  .navdots{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:18px;
+  }
+  .navdot{
+    width:26px;height:26px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink-dim);
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex:none;
+  }
+  .navdot:hover{border-color:var(--accent-2);}
+  .navdot.current{border-color:var(--accent);border-width:2px;color:var(--ink);}
+  .navdot.correct{background:var(--success-bg);border-color:var(--success);color:var(--success);}
+  .navdot.wrong{background:var(--danger-bg);border-color:var(--danger);color:var(--danger);}
+  .navdot.skipped{background:var(--skip-bg);border-color:var(--skip);color:var(--skip);}
+
+  .tag{
+    display:inline-block;
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.06em;
+    color:var(--accent);
+    background:color-mix(in srgb, var(--accent) 14%, transparent);
+    padding:3px 8px;
+    border-radius:6px;
+    margin-bottom:12px;
+  }
+  .review-note{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11.5px;
+    color:var(--ink-dim);
+    margin:-4px 0 14px;
+  }
+  .question{
+    font-size:19px;
+    font-weight:600;
+    line-height:1.4;
+    margin:0 0 18px;
+    text-wrap:balance;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .opt{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    text-align:left;
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    font-size:15px;
+    font-family:inherit;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .opt:hover:not(:disabled){border-color:var(--accent-2);}
+  .opt:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .opt .letter{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-dim);
+    border:1px solid var(--line);
+    border-radius:6px;
+    width:22px;height:22px;
+    display:flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+  .opt:disabled{cursor:default;}
+  .opt.is-correct{border-color:var(--success);background:var(--success-bg);}
+  .opt.is-correct .letter{border-color:var(--success);color:var(--success);}
+  .opt.is-wrong{border-color:var(--danger);background:var(--danger-bg);}
+  .opt.is-wrong .letter{border-color:var(--danger);color:var(--danger);}
+
+  .feedback{
+    margin-top:16px;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.5;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.correct{background:var(--success-bg);color:var(--success);}
+  .feedback.wrong{background:var(--danger-bg);color:var(--danger);}
+  .feedback.skipped{background:var(--skip-bg);color:var(--skip);}
+  .feedback b{color:var(--ink);}
+
+  .actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .actions .right-group{display:flex;gap:10px;}
+  button.navbtn{
+    font-family:"JetBrains Mono",monospace;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.03em;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    padding:11px 18px;
+    border-radius:9px;
+    cursor:pointer;
+  }
+  button.navbtn:hover:not(:disabled){border-color:var(--accent-2);}
+  button.navbtn:disabled{opacity:.4;cursor:default;}
+  button.skip{
+    color:var(--ink-dim);
+    background:transparent;
+  }
+  button.skip:hover{color:var(--skip);border-color:var(--skip);}
+  button.next{
+    color:var(--accent-ink);
+    background:var(--accent);
+    border:none;
+  }
+  button.next:hover:not(:disabled){filter:brightness(1.08);}
+
+  /* ---- results ---- */
+  .results{display:none;}
+  .results.show{display:block;}
+  .results .tier{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--accent-2);
+    font-weight:700;
+  }
+  .results .score{
+    font-family:"JetBrains Mono",monospace;
+    font-size:clamp(38px,8vw,58px);
+    font-weight:800;
+    margin:4px 0 2px;
+    font-variant-numeric:tabular-nums;
+  }
+  .results .score small{font-size:0.4em;color:var(--ink-dim);font-weight:600;}
+  .results p.msg{color:var(--ink-dim);font-size:15px;max-width:52ch;margin:6px 0 22px;}
+  .breakdown{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .breakdown .row{
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:9px 11px;
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    background:var(--paper);
+  }
+  .breakdown .row span.k{color:var(--ink-dim);}
+  .breakdown .row.perfect{border-color:var(--success);}
+  .breakdown .row.miss{border-color:var(--danger);}
+  button.restart{
+    font-family:"JetBrains Mono",monospace;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--line);
+    padding:11px 20px;
+    border-radius:9px;
+    cursor:pointer;
+  }
+  button.restart:hover{border-color:var(--accent-2);}
+
+  .quiz-live{display:block;}
+  .quiz-live.hide{display:none;}
+
+  footer.credit{
+    margin-top:26px;
+    font-size:12px;
+    color:var(--ink-dim);
+    text-align:center;
+  }
+  footer.credit a{color:var(--accent-2);}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="titles">
+      <span class="eyebrow">networking fundamentals · self-test</span>
+      <h1>OSI Stack Quiz</h1>
+      <p class="sub">10 random questions pulled from a pool of 32, so you can retake it and see different ones. Progress is saved in this browser — refreshing won't reset you.</p>
+    </div>
+    <button class="ghost-small" id="newQuizTop">↻ New quiz</button>
+  </header>
+
+  <div class="layout">
+    <nav class="rack" id="rack" aria-label="Layer progress"></nav>
+
+    <main class="card">
+      <div class="quiz-live" id="quizLive">
+        <div class="progress-row">
+          <span id="qCount">Question 1 / 10</span>
+          <span id="qScore">Score 0</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="navdots" id="navdots" aria-label="Jump to question"></div>
+
+        <span class="tag" id="qTag">LAYER 7 · APPLICATION</span>
+        <p class="question" id="qText"></p>
+        <div class="options" id="qOptions"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="actions">
+          <button class="navbtn" id="prevBtn">← Previous</button>
+          <div class="right-group">
+            <button class="navbtn skip" id="skipBtn">Skip</button>
+            <button class="navbtn next" id="nextBtn" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="results" id="results">
+        <span class="tier" id="tier">FULL DUPLEX</span>
+        <div class="score" id="scoreBig">0<small>/10</small></div>
+        <p class="msg" id="scoreMsg"></p>
+        <div class="breakdown" id="breakdown"></div>
+        <button class="restart" id="restartBtn">New quiz (10 random questions)</button>
+      </div>
+    </main>
+  </div>
+
+  <footer class="credit">Notes: <a href="#">osi-model.md</a> · source article: Stéphane Robert's "Le modèle OSI"</footer>
+</div>
+
+<script>
+(function(){
+  var LAYERS = [
+    {n:7,name:"Application"},
+    {n:6,name:"Presentation"},
+    {n:5,name:"Session"},
+    {n:4,name:"Transport"},
+    {n:3,name:"Network"},
+    {n:2,name:"Data Link"},
+    {n:1,name:"Physical"}
+  ];
+
+  var STORAGE_KEY = "osiQuiz.v2";
+  var QUIZ_LENGTH = 10;
+
+  // Full question pool (28 questions). Each session draws 10 from here.
+  var POOL = [
+    // Layer 7 — Application
+    {layer:7, q:"Your email client and your browser both rely on protocols like SMTP and HTTP. Which layer are those protocols part of?",
+     options:["Application","Presentation","Session","Transport"], correct:0,
+     exp:"HTTP, SMTP, DNS, SSH — anything the end-user app speaks directly to the network — lives at Layer 7, Application."},
+    {layer:7, q:"DNS turns a website name (like example.com) into an IP address. Which layer is DNS part of?",
+     options:["Network","Application","Physical","Transport"], correct:1,
+     exp:"DNS is a service the application uses before it even opens a connection — it's a Layer 7, Application, protocol."},
+    {layer:7, q:"SSH (secure remote login) and FTP (file transfer) both operate at which layer?",
+     options:["Data Link","Session","Application","Presentation"], correct:2,
+     exp:"SSH and FTP are protocols the application uses directly — both are Layer 7, Application."},
+
+    // Layer 6 — Presentation
+    {layer:6, q:"Which layer translates data into a common format both computers can understand — things like text encoding or image formats such as JPEG?",
+     options:["Session","Presentation","Network","Transport"], correct:1,
+     exp:"Layer 6, Presentation, is about the *format* of the data — encoding, compression, and file formats."},
+    {layer:6, q:"Encrypting data before it's sent (as TLS does) is usually described as work done at which layer?",
+     options:["Presentation","Physical","Network","Session"], correct:0,
+     exp:"Encryption changes the data's format, which is why TLS is usually drawn at Layer 6, Presentation — even though in practice it sits right above the Transport layer."},
+    {layer:6, q:"Compressing a file to make it smaller before sending it is an example of which layer's job?",
+     options:["Transport","Data Link","Presentation","Application"], correct:2,
+     exp:"Compression changes how the data looks without touching the actual conversation — that's Layer 6, Presentation."},
+
+    // Layer 5 — Session
+    {layer:5, q:"Which layer is in charge of opening and closing a conversation between two computers — separate from actually sending the data?",
+     options:["Session","Transport","Network","Physical"], correct:0,
+     exp:"Layer 5, Session, manages the start/end of a dialogue between hosts, not the raw delivery of bytes."},
+    {layer:5, q:"If two computers need to keep track of whose turn it is to \"talk\" during a conversation, which layer handles that?",
+     options:["Data Link","Session","Presentation","Network"], correct:1,
+     exp:"That kind of dialogue coordination is Layer 5, Session — it manages the conversation itself."},
+    {layer:5, q:"Which layer sits between Transport (layer 4) and Presentation (layer 6)?",
+     options:["Application","Physical","Session","Data Link"], correct:2,
+     exp:"Layer 5, Session, is sandwiched right between Transport and Presentation in the stack."},
+
+    // Layer 4 — Transport
+    {layer:4, q:"Which layer splits data into smaller pieces and (when using TCP) makes sure every piece arrives, in the right order?",
+     options:["Network","Transport","Data Link","Presentation"], correct:1,
+     exp:"Reliable, ordered delivery is the Transport layer's job — Layer 4."},
+    {layer:4, q:"Port numbers — like port 443 for HTTPS or port 80 for HTTP — belong to which layer?",
+     options:["Transport","Network","Physical","Application"], correct:0,
+     exp:"Ports are how Layer 4, Transport, keeps track of which app on a device a piece of data is for."},
+    {layer:4, q:"TCP and UDP are both protocols found at which layer?",
+     options:["Data Link","Session","Transport","Network"], correct:2,
+     exp:"TCP (reliable) and UDP (fast, no guarantees) are the two main Layer 4, Transport, protocols."},
+    {layer:4, q:"On a single device, what tells a piece of incoming data which specific app or service it's meant for?",
+     options:["Its MAC address","Its port number","Its domain name","Its IP address"], correct:1,
+     exp:"The IP address gets data to the right device (Layer 3); the port number then hands it to the right service on that device (Layer 4) — e.g. port 443 for HTTPS."},
+
+    // Layer 3 — Network
+    {layer:3, q:"IP addresses are used to route data between different networks at which layer?",
+     options:["Data Link","Network","Session","Physical"], correct:1,
+     exp:"Logical addressing (IP) and routing between networks is the Layer 3, Network, job."},
+    {layer:3, q:"A router mainly makes its forwarding decisions based on information from which layer?",
+     options:["Network","Presentation","Transport","Physical"], correct:0,
+     exp:"Routers read IP addresses to decide where to send traffic next — that's Layer 3, Network."},
+    {layer:3, q:"ICMP — the protocol behind tools like ping — is considered part of which layer?",
+     options:["Application","Transport","Network","Data Link"], correct:2,
+     exp:"ICMP travels inside IP packets and is used for diagnostics/control, which puts it at Layer 3, Network."},
+
+    // Layer 2 — Data Link
+    {layer:2, q:"MAC addresses — the address burned into a network card — are used at which layer?",
+     options:["Network","Data Link","Transport","Application"], correct:1,
+     exp:"MAC addressing and local delivery on the same network segment is Layer 2, Data Link."},
+    {layer:2, q:"Which layer packages data into \"frames\" right before it becomes raw electrical or light signals?",
+     options:["Physical","Network","Data Link","Session"], correct:2,
+     exp:"Layer 2, Data Link, builds frames (with MAC addresses) — the very last step before Layer 1 turns them into signals."},
+    {layer:2, q:"ARP finds a device's MAC address when you already know its IP address. Because it bridges IP and MAC, it's often nicknamed \"layer __\".",
+     options:["1.5","2.5","3.5","4.5"],
+     correct:1,
+     exp:"ARP serves Layer 3 (IP) but works with Layer 2 (MAC) addresses, so it's informally called \"layer 2.5\"."},
+    {layer:2, q:"A network switch decides where to forward each frame by reading which kind of address?",
+     options:["IP address","MAC address","Port number","Domain name"], correct:1,
+     exp:"Switches read MAC addresses to forward frames — that's why a switch is described as a Layer 2, Data Link, device."},
+
+    // Layer 1 — Physical
+    {layer:1, q:"Cables, fiber optic light, and radio waves are all part of which layer?",
+     options:["Physical","Data Link","Network","Session"], correct:0,
+     exp:"Anything about the actual physical medium — cables, fiber, radio — is Layer 1, Physical."},
+    {layer:1, q:"Which layer deals only with raw 1s and 0s as electrical or light signals, with no concept of addresses at all?",
+     options:["Data Link","Physical","Network","Transport"], correct:1,
+     exp:"Layer 1, Physical, doesn't know about addresses — it just moves raw bits over the medium."},
+    {layer:1, q:"If someone physically cuts a network cable, which layer is directly affected first?",
+     options:["Application","Presentation","Physical","Session"], correct:2,
+     exp:"A cut cable is a problem with the actual medium — Layer 1, Physical — everything above it fails as a result."},
+
+    // General / cross-layer
+    {layer:"general", q:"As data moves down the stack, each layer adds its own header on top of what it received. What is this process called?",
+     options:["Encapsulation","Routing","Multiplexing","Fragmentation"], correct:0,
+     exp:"Wrapping data with a new header at each layer going down is called encapsulation. Going back up, it's decapsulation."},
+    {layer:"general", q:"Data becomes a Segment, then a Packet, then a Frame as it moves down the stack. What comes right after \"Segment\"?",
+     options:["Frame","Packet","Bits","Datagram"], correct:1,
+     exp:"The order is: Data → Segment (Transport) → Packet (Network) → Frame (Data Link) → Bits (Physical)."},
+    {layer:"general", q:"The TCP/IP model has only 4 layers instead of OSI's 7. Its single \"Application\" layer combines which three OSI layers?",
+     options:["Application, Presentation, Session","Application, Transport, Network","Presentation, Session, Transport","Network, Data Link, Physical"], correct:0,
+     exp:"TCP/IP merges OSI's Application (7), Presentation (6), and Session (5) into one Application layer."},
+    {layer:"general", q:"In the TCP/IP model, OSI's Data Link and Physical layers are combined into which single layer?",
+     options:["Internet layer","Transport layer","Link (Network Access) layer","Application layer"], correct:2,
+     exp:"TCP/IP's Link (or Network Access) layer covers OSI's Data Link (2) and Physical (1)."},
+    {layer:"general", q:"Your cable is plugged in and the link light is on, but you still can't load any website. What's the most useful next thing to check?",
+     options:["Whether the webpage's colors render correctly","Whether your device has a valid IP address and a working route","Whether your monitor is on","Whether your email works"], correct:1,
+     exp:"With Layer 1/2 (cable, link) already confirmed working, the next step up the stack is Layer 3 — IP address and routing."},
+    {layer:"general", q:"The mnemonic \"All People Seem To Need Data Processing\" lists the 7 OSI layers in which direction?",
+     options:["Layer 1 up to Layer 7 (bottom to top)","Layer 7 down to Layer 1 (top to bottom)","Only layers 1 through 4","Alphabetical order"], correct:1,
+     exp:"\"All People Seem To Need Data Processing\" spells out Application → Presentation → Session → Transport → Network → Data Link → Physical — top to bottom."},
+    {layer:"general", q:"True or false: real internet traffic strictly passes through all 7 distinct OSI layers, one by one, exactly as the model describes.",
+     options:["True", "False — OSI is a reference/teaching model; real traffic runs on TCP/IP's 4 layers"], correct:1,
+     exp:"OSI is a conceptual model used to describe and troubleshoot networking — the internet itself actually runs on the simpler 4-layer TCP/IP model."},
+    {layer:"general", q:"A \"socket\" is the pairing of which two things, uniquely identifying one conversation with one service on one host?",
+     options:["MAC address + port number","IP address + port number","Domain name + MAC address","Port number + protocol name"], correct:1,
+     exp:"A socket is an IP address plus a port number (like 192.168.1.10:443) — it's the exact handle a connection is tracked by."},
+    {layer:"general", q:"Both TCP and UDP live at the Transport layer. What's the actual difference between them?",
+     options:[
+       "TCP is connection-oriented and reliable; UDP is connectionless with no delivery guarantee",
+       "TCP only works on local networks; UDP only works over the internet",
+       "TCP is for downloads; UDP is for uploads",
+       "There is no real difference — they're interchangeable"
+     ], correct:0,
+     exp:"TCP opens a session, numbers and acknowledges data, and retransmits losses. UDP just sends, with no session and no guarantee anything arrives."}
+  ];
+
+  var session = null; // {selected:[...], results:{idx:{selectedIdx,correct,skipped}}, currentIdx}
+
+  var rackEl = document.getElementById('rack');
+  var qCount = document.getElementById('qCount');
+  var qScore = document.getElementById('qScore');
+  var progressFill = document.getElementById('progressFill');
+  var navdotsEl = document.getElementById('navdots');
+  var qTag = document.getElementById('qTag');
+  var qText = document.getElementById('qText');
+  var qOptions = document.getElementById('qOptions');
+  var feedback = document.getElementById('feedback');
+  var reviewNote = null;
+  var prevBtn = document.getElementById('prevBtn');
+  var skipBtn = document.getElementById('skipBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var quizLive = document.getElementById('quizLive');
+  var resultsEl = document.getElementById('results');
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function pickSession(){
+    var byLayer = {};
+    LAYERS.forEach(function(l){ byLayer[l.n] = []; });
+    var general = [];
+    POOL.forEach(function(item, idx){
+      if (item.layer === "general") general.push(idx);
+      else byLayer[item.layer].push(idx);
+    });
+
+    var chosenIdx = [];
+    LAYERS.forEach(function(l){
+      var pick = shuffle(byLayer[l.n])[0];
+      chosenIdx.push(pick);
+    });
+
+    var remaining = [];
+    POOL.forEach(function(_, idx){ if (chosenIdx.indexOf(idx) === -1) remaining.push(idx); });
+    remaining = shuffle(remaining);
+    var need = QUIZ_LENGTH - chosenIdx.length;
+    for (var i=0;i<need && i<remaining.length;i++){ chosenIdx.push(remaining[i]); }
+
+    chosenIdx = shuffle(chosenIdx);
+
+    var selected = chosenIdx.map(function(idx){
+      var src = POOL[idx];
+      var optOrder = shuffle(src.options.map(function(_,i){return i;}));
+      var options = optOrder.map(function(i){ return src.options[i]; });
+      var correct = optOrder.indexOf(src.correct);
+      return {layer:src.layer, q:src.q, options:options, correct:correct, exp:src.exp};
+    });
+
+    return {selected: selected, results: {}, currentIdx: 0};
+  }
+
+  function saveSession(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    }catch(e){ /* storage unavailable — quiz still works, just won't survive a refresh */ }
+  }
+
+  function loadSession(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.selected) || parsed.selected.length !== QUIZ_LENGTH) return null;
+      return parsed;
+    }catch(e){ return null; }
+  }
+
+  function newQuiz(){
+    session = pickSession();
+    saveSession();
+    quizLive.classList.remove('hide');
+    resultsEl.classList.remove('show');
+    buildNavdots();
+    renderQuestion();
+  }
+
+  function buildRack(){
+    rackEl.innerHTML = "";
+    LAYERS.forEach(function(l){
+      var box = document.createElement('div');
+      box.className = 'layer-box';
+      box.id = 'layer-' + l.n;
+      box.innerHTML = '<div class="fill"></div><div class="num mono">L' + l.n + '</div><div class="name">' + l.name + '</div>';
+      rackEl.appendChild(box);
+    });
+    var gen = document.createElement('div');
+    gen.className = 'rack-general';
+    gen.id = 'rackGeneral';
+    rackEl.appendChild(gen);
+  }
+
+  function refreshRack(){
+    LAYERS.forEach(function(l){
+      var box = document.getElementById('layer-'+l.n);
+      box.classList.remove('correct','wrong','skipped','active');
+    });
+    var gen = document.getElementById('rackGeneral');
+    gen.innerHTML = '<span>GEN</span>';
+    var generalCount = 0;
+
+    session.selected.forEach(function(item, idx){
+      var res = session.results[idx];
+      if (item.layer === "general"){
+        var dot = document.createElement('span');
+        dot.className = 'dot';
+        if (res) dot.classList.add(res.skipped ? 'skipped' : (res.correct ? 'correct' : 'wrong'));
+        gen.appendChild(dot);
+        generalCount++;
+      } else if (res){
+        var box = document.getElementById('layer-'+item.layer);
+        box.classList.remove('correct','wrong','skipped');
+        box.classList.add(res.skipped ? 'skipped' : (res.correct ? 'correct' : 'wrong'));
+      }
+    });
+    gen.classList.toggle('hide', generalCount === 0);
+
+    var current = session.selected[session.currentIdx];
+    if (current && current.layer !== "general"){
+      document.getElementById('layer-'+current.layer).classList.add('active');
+    }
+  }
+
+  function buildNavdots(){
+    navdotsEl.innerHTML = "";
+    session.selected.forEach(function(_, idx){
+      var d = document.createElement('button');
+      d.className = 'navdot';
+      d.type = 'button';
+      d.textContent = (idx+1);
+      d.addEventListener('click', function(){ goTo(idx); });
+      navdotsEl.appendChild(d);
+    });
+    refreshNavdots();
+  }
+
+  function refreshNavdots(){
+    var dots = navdotsEl.querySelectorAll('.navdot');
+    dots.forEach(function(d, idx){
+      d.classList.remove('current','correct','wrong','skipped');
+      var res = session.results[idx];
+      if (res) d.classList.add(res.skipped ? 'skipped' : (res.correct ? 'correct' : 'wrong'));
+      if (idx === session.currentIdx) d.classList.add('current');
+    });
+  }
+
+  function goTo(idx){
+    session.currentIdx = idx;
+    saveSession();
+    renderQuestion();
+  }
+
+  function computeScore(){
+    var score = 0;
+    Object.keys(session.results).forEach(function(k){
+      var r = session.results[k];
+      if (r && !r.skipped && r.correct) score++;
+    });
+    return score;
+  }
+
+  function completedCount(){
+    var n = 0;
+    Object.keys(session.results).forEach(function(k){
+      var r = session.results[k];
+      if (r && !r.skipped) n++;
+    });
+    return n;
+  }
+
+  function renderQuestion(){
+    var idx = session.currentIdx;
+    var item = session.selected[idx];
+    var res = session.results[idx];
+
+    qCount.textContent = "Question " + (idx+1) + " / " + session.selected.length;
+    qScore.textContent = "Score " + computeScore();
+    progressFill.style.width = (completedCount()/session.selected.length*100) + "%";
+    refreshNavdots();
+    refreshRack();
+
+    if (item.layer === "general"){
+      qTag.textContent = "CROSS-LAYER CONCEPT";
+    } else {
+      var l = LAYERS.filter(function(x){return x.n===item.layer;})[0];
+      qTag.textContent = "LAYER " + l.n + " · " + l.name.toUpperCase();
+    }
+
+    qText.textContent = item.q;
+    qOptions.innerHTML = "";
+    var letters = ["A","B","C","D"];
+    var locked = !!(res && !res.skipped);
+
+    item.options.forEach(function(opt, i){
+      var btn = document.createElement('button');
+      btn.className = 'opt';
+      btn.innerHTML = '<span class="letter mono">' + letters[i] + '</span><span>' + opt + '</span>';
+      btn.disabled = locked;
+      if (locked){
+        if (i === item.correct) btn.classList.add('is-correct');
+        else if (i === res.selectedIdx) btn.classList.add('is-wrong');
+      }
+      btn.addEventListener('click', function(){ selectAnswer(i); });
+      qOptions.appendChild(btn);
+    });
+
+    feedback.className = 'feedback';
+    feedback.innerHTML = '';
+    if (res && !res.skipped){
+      feedback.className = 'feedback show ' + (res.correct ? 'correct' : 'wrong');
+      feedback.innerHTML = (res.correct ? '<b>Correct.</b> ' : '<b>Not quite.</b> ') + item.exp;
+    } else if (res && res.skipped){
+      feedback.className = 'feedback show skipped';
+      feedback.innerHTML = '<b>Skipped.</b> Pick an answer any time to score this one.';
+    }
+
+    prevBtn.disabled = (idx === 0);
+    skipBtn.style.display = locked ? 'none' : '';
+    nextBtn.disabled = !res;
+    nextBtn.textContent = (idx === session.selected.length - 1) ? "See results →" : "Next →";
+  }
+
+  function selectAnswer(i){
+    var idx = session.currentIdx;
+    var item = session.selected[idx];
+    var isCorrect = i === item.correct;
+    session.results[idx] = {selectedIdx:i, correct:isCorrect, skipped:false};
+    saveSession();
+    renderQuestion();
+  }
+
+  function skipCurrent(){
+    var idx = session.currentIdx;
+    if (session.results[idx] && !session.results[idx].skipped) return; // already answered, nothing to skip
+    session.results[idx] = {selectedIdx:null, correct:false, skipped:true};
+    saveSession();
+    renderQuestion();
+  }
+
+  function showResults(){
+    quizLive.classList.add('hide');
+    resultsEl.classList.add('show');
+
+    var total = session.selected.length;
+    var score = computeScore();
+    document.getElementById('scoreBig').innerHTML = score + '<small>/' + total + '</small>';
+
+    var tier, msg;
+    var pct = score/total;
+    if (score === total){ tier = "ZERO PACKET LOSS"; msg = "Every question confirmed. You could hand-encapsulate a frame in your sleep."; }
+    else if (pct >= 0.85){ tier = "FULL DUPLEX"; msg = "Strong grasp of the stack — only a couple of frames dropped."; }
+    else if (pct >= 0.6){ tier = "SOME RETRANSMITS"; msg = "Solid foundation, but a few layers need a re-read of the notes."; }
+    else { tier = "LINK DOWN"; msg = "Worth another pass through the article and video before it sticks."; }
+
+    document.getElementById('tier').textContent = tier;
+    document.getElementById('scoreMsg').textContent = msg;
+
+    var layerOutcome = {};
+    var genCorrect = 0, genTotal = 0;
+    session.selected.forEach(function(item, idx){
+      var r = session.results[idx];
+      if (item.layer === "general"){
+        genTotal++;
+        if (r && !r.skipped && r.correct) genCorrect++;
+      } else {
+        layerOutcome[item.layer] = r ? (r.skipped ? 'skipped' : (r.correct ? 'correct' : 'wrong')) : 'unseen';
+      }
+    });
+
+    var breakdown = document.getElementById('breakdown');
+    breakdown.innerHTML = "";
+    LAYERS.forEach(function(l){
+      var st = layerOutcome[l.n];
+      var row = document.createElement('div');
+      row.className = 'row ' + (st === 'correct' ? 'perfect' : (st === 'wrong' ? 'miss' : ''));
+      var mark = st === 'correct' ? '✓' : (st === 'wrong' ? '✗' : (st === 'skipped' ? '—' : '·'));
+      row.innerHTML = '<span class="k">L' + l.n + ' ' + l.name + '</span><span>' + mark + '</span>';
+      breakdown.appendChild(row);
+    });
+    if (genTotal > 0){
+      var genRow = document.createElement('div');
+      genRow.className = 'row ' + (genCorrect === genTotal ? 'perfect' : (genCorrect === 0 ? 'miss' : ''));
+      genRow.innerHTML = '<span class="k">Cross-layer</span><span>' + genCorrect + '/' + genTotal + '</span>';
+      breakdown.appendChild(genRow);
+    }
+  }
+
+  prevBtn.addEventListener('click', function(){
+    if (session.currentIdx > 0) goTo(session.currentIdx - 1);
+  });
+  skipBtn.addEventListener('click', skipCurrent);
+  nextBtn.addEventListener('click', function(){
+    if (session.currentIdx < session.selected.length - 1){
+      goTo(session.currentIdx + 1);
+    } else {
+      showResults();
+    }
+  });
+  document.getElementById('restartBtn').addEventListener('click', newQuiz);
+  document.getElementById('newQuizTop').addEventListener('click', newQuiz);
+
+  buildRack();
+  var loaded = loadSession();
+  if (loaded){
+    session = loaded;
+    buildNavdots();
+    renderQuestion();
+  } else {
+    newQuiz();
+  }
+})();
+</script>
